@@ -1,0 +1,211 @@
+@import "tailwindcss";
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+
+@tailwind utilities;
+
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 17, 24, 39; /* gray-900 */
+  --background-end-rgb: 17, 24, 39;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 17, 24, 39;
+    --background-end-rgb: 17, 24, 39;
+  }
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* optional but helps prevent scroll bars */
+}
+
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Custom classes */
+.dashboard-card {
+  @apply transition-all duration-300 border border-gray-700;
+}
+
+.dashboard-card:hover {
+  @apply transform -translate-y-1 shadow-lg border-blue-500/50;
+}
+
+.active-tab {
+  @apply relative text-blue-400 font-semibold;
+}
+
+.active-tab::after {
+  @apply content-[""] absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500;
+}
+
+.badge {
+  @apply text-xs px-2 py-1 rounded-full;
+}
+
+.badge-primary {
+  @apply bg-blue-500/20 text-blue-400;
+}
+
+.badge-success {
+  @apply bg-green-500/20 text-green-400;
+}
+
+.badge-warning {
+  @apply bg-yellow-500/20 text-yellow-400;
+}
+
+.service-card {
+  @apply transition-all duration-300 border-2 border-transparent;
+}
+
+.service-card:hover, .service-card.selected {
+  @apply transform -translate-y-1 border-blue-500 shadow-lg;
+}
+
+.service-card.selected {
+  @apply bg-blue-500/10;
+}
+
+.time-slot {
+  @apply transition-all duration-200;
+}
+
+.time-slot:hover, .time-slot.selected {
+  @apply bg-blue-500 text-white;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.delay-100 {
+  animation-delay: 0.2s;
+}
+
+.delay-200 {
+  animation-delay: 0.4s;
+}
+
+/* Hero slideshow styles */
+.hero-slideshow {
+  @apply absolute w-full h-full overflow-hidden;
+}
+
+.slide {
+  @apply absolute w-full h-full bg-cover bg-center bg-no-repeat opacity-0;
+  animation: slideShow 30s infinite;
+  transition: opacity 1.5s ease-in-out;
+  will-change: opacity;
+}
+
+@keyframes slideShow {
+  0% { opacity: 0; }
+  5% { opacity: 1; }
+  10% { opacity: 1; }
+  15% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-blue-500 rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-blue-600;
+}
+
+
+:root {
+  /* Light theme colors */
+  --background: 255, 255, 255;
+  --foreground: 17, 24, 39; /* gray-900 */
+  --primary: 59, 130, 246; /* blue-500 */
+  --primary-foreground: 255, 255, 255;
+  --card: 255, 255, 255;
+  --card-foreground: 17, 24, 39;
+  --border: 229, 231, 235; /* gray-200 */
+}
+
+.dark {
+  /* Dark theme colors */
+  --background: 17, 24, 39; /* gray-900 */
+  --foreground: 255, 255, 255;
+  --primary: 59, 130, 246; /* blue-500 */
+  --primary-foreground: 255, 255, 255;
+  --card: 31, 41, 55; /* gray-800 */
+  --card-foreground: 255, 255, 255;
+  --border: 55, 65, 81; /* gray-700 */
+}
+
+body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+}
+
+/* Apply theme colors to components */
+.bg-background {
+  background-color: rgb(var(--background));
+}
+
+.text-foreground {
+  color: rgb(var(--foreground));
+}
+
+.bg-primary {
+  background-color: rgb(var(--primary));
+}
+
+.text-primary-foreground {
+  color: rgb(var(--primary-foreground));
+}
+
+.bg-card {
+  background-color: rgb(var(--card));
+}
+
+.text-card-foreground {
+  color: rgb(var(--card-foreground));
+}
+
+.border {
+  border-color: rgb(var(--border));
+}
