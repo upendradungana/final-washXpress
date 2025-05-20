@@ -3,10 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
 // GET single booking
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: RouteContext
 ) {
   const session = await getServerSession(authOptions);
 
@@ -16,7 +22,7 @@ export async function GET(
 
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id: context.params.id },
+      where: { id: params.id },
       include: {
         user: {
           select: {
@@ -53,7 +59,7 @@ export async function GET(
 // PATCH update booking
 export async function PATCH(
   request: Request,
-  context: { params: { id: string } }
+  { params }: RouteContext
 ) {
   const session = await getServerSession(authOptions);
 
@@ -67,7 +73,7 @@ export async function PATCH(
 
     // Check if booking exists and user has access
     const existingBooking = await prisma.booking.findUnique({
-      where: { id: context.params.id },
+      where: { id: params.id },
     });
 
     if (!existingBooking) {
@@ -88,7 +94,7 @@ export async function PATCH(
     }
 
     const booking = await prisma.booking.update({
-      where: { id: context.params.id },
+      where: { id: params.id },
       data: {
         ...(status && { status }),
         ...(date && { date: new Date(date) }),
@@ -109,7 +115,7 @@ export async function PATCH(
 // DELETE booking
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  { params }: RouteContext
 ) {
   const session = await getServerSession(authOptions);
 
@@ -120,7 +126,7 @@ export async function DELETE(
   try {
     // Check if booking exists and user has access
     const booking = await prisma.booking.findUnique({
-      where: { id: context.params.id },
+      where: { id: params.id },
     });
 
     if (!booking) {
@@ -132,7 +138,7 @@ export async function DELETE(
     }
 
     await prisma.booking.delete({
-      where: { id: context.params.id },
+      where: { id: params.id },
     });
 
     return NextResponse.json({ message: "Booking deleted successfully" });
