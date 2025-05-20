@@ -1,15 +1,163 @@
-import { NextResponse } from "next/server";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// import { NextRequest, NextResponse } from "next/server";
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "@/lib/auth";
+// import { prisma } from "@/lib/prisma";
+
+// // GET single booking
+// export async function GET(
+//   request: NextRequest,
+//   { params }: { params: { id: string } }
+// ) {
+//   const session = await getServerSession(authOptions);
+
+//   if (!session) {
+//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//   }
+
+//   try {
+//     const booking = await prisma.booking.findUnique({
+//       where: { id: params.id },
+//       include: {
+//         user: {
+//           select: {
+//             name: true,
+//             email: true,
+//             phone: true,
+//           },
+//         },
+//         vehicle: true,
+//       },
+//     });
+
+//     if (!booking) {
+//       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+//     }
+
+//     // Check if user has access to this booking
+//     if (
+//       session.user.role !== "PROVIDER" &&
+//       booking.userId !== session.user.id
+//     ) {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//     }
+
+//     return NextResponse.json(booking);
+//   } catch (error) {
+//     return NextResponse.json(
+//       { error: "Failed to fetch booking" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// // PATCH update booking
+// export async function PATCH(
+//   request: NextRequest,
+//   { params }: { params: { id: string } }
+// ) {
+//   const session = await getServerSession(authOptions);
+
+//   if (!session) {
+//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//   }
+
+//   try {
+//     const json = await request.json();
+//     const { status, date, timeSlot, specialRequests } = json;
+
+//     // Check if booking exists and user has access
+//     const existingBooking = await prisma.booking.findUnique({
+//       where: { id: params.id },
+//     });
+
+//     if (!existingBooking) {
+//       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+//     }
+
+//     // Only allow providers to update status
+//     if (status && session.user.role !== "PROVIDER") {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//     }
+
+//     // Only allow booking owner to update other fields
+//     if (
+//       (date || timeSlot || specialRequests) &&
+//       existingBooking.userId !== session.user.id
+//     ) {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//     }
+
+//     const booking = await prisma.booking.update({
+//       where: { id: params.id },
+//       data: {
+//         ...(status && { status }),
+//         ...(date && { date: new Date(date) }),
+//         ...(timeSlot && { timeSlot }),
+//         ...(specialRequests && { specialRequests }),
+//       },
+//     });
+
+//     return NextResponse.json(booking);
+//   } catch (error) {
+//     return NextResponse.json(
+//       { error: "Failed to update booking" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// // DELETE booking
+// export async function DELETE(
+//   request: NextRequest,
+//   { params }: { params: { id: string } }
+// ) {
+//   const session = await getServerSession(authOptions);
+
+//   if (!session) {
+//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//   }
+
+//   try {
+//     // Check if booking exists and user has access
+//     const booking = await prisma.booking.findUnique({
+//       where: { id: params.id },
+//     });
+
+//     if (!booking) {
+//       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+//     }
+
+//     if (booking.userId !== session.user.id && session.user.role !== "PROVIDER") {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//     }
+
+//     await prisma.booking.delete({
+//       where: { id: params.id },
+//     });
+
+//     return NextResponse.json({ message: "Booking deleted successfully" });
+//   } catch (error) {
+//     return NextResponse.json(
+//       { error: "Failed to delete booking" },
+//       { status: 500 }
+//     );
+//   }
+// } 
+
+//........................................
+
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-type RouteContext = { params: { id: string } };
-
-// GET single booking
+// GET a single booking
 export async function GET(
-  request: Request,
-  { params }: RouteContext
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -18,7 +166,7 @@ export async function GET(
 
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -35,7 +183,6 @@ export async function GET(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    // Check if user has access to this booking
     if (
       session.user.role !== "PROVIDER" &&
       booking.userId !== session.user.id
@@ -44,7 +191,6 @@ export async function GET(
     }
 
     return NextResponse.json(booking);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch booking" },
@@ -53,11 +199,12 @@ export async function GET(
   }
 }
 
-// PATCH update booking
+// UPDATE a booking
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -65,43 +212,31 @@ export async function PATCH(
   }
 
   try {
-    const json = await request.json();
-    const { status, date, timeSlot, specialRequests } = json;
-
-    // Check if booking exists and user has access
     const existingBooking = await prisma.booking.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingBooking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    // Only allow providers to update status
-    if (status && session.user.role !== "PROVIDER") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Only allow booking owner to update other fields
     if (
-      (date || timeSlot || specialRequests) &&
+      session.user.role !== "PROVIDER" &&
       existingBooking.userId !== session.user.id
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const booking = await prisma.booking.update({
-      where: { id: params.id },
+    const body = await request.json();
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id },
       data: {
-        ...(status && { status }),
-        ...(date && { date: new Date(date) }),
-        ...(timeSlot && { timeSlot }),
-        ...(specialRequests && { specialRequests }),
+        ...body,
       },
     });
 
-    return NextResponse.json(booking);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    return NextResponse.json(updatedBooking);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to update booking" },
@@ -110,11 +245,12 @@ export async function PATCH(
   }
 }
 
-// DELETE booking
+// DELETE a booking
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -122,29 +258,30 @@ export async function DELETE(
   }
 
   try {
-    // Check if booking exists and user has access
-    const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id },
     });
 
-    if (!booking) {
+    if (!existingBooking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (booking.userId !== session.user.id && session.user.role !== "PROVIDER") {
+    if (
+      session.user.role !== "PROVIDER" &&
+      existingBooking.userId !== session.user.id
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await prisma.booking.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Booking deleted successfully" });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to delete booking" },
       { status: 500 }
     );
   }
-} 
+}
