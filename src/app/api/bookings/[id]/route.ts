@@ -155,9 +155,9 @@ import { prisma } from "@/lib/prisma";
 // GET a single booking
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
+  const { id } = params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -202,9 +202,9 @@ export async function GET(
 // UPDATE a booking
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
+  const { id } = params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -248,9 +248,9 @@ export async function PATCH(
 // DELETE a booking
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
+  const { id } = params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -285,3 +285,62 @@ export async function DELETE(
     );
   }
 }
+//........................................
+
+
+// // src/app/api/bookings/[id]/route.ts
+
+// import { NextRequest, NextResponse } from 'next/server';
+// import { connectDB } from '../../../lib/mongodb';
+// import Booking from '@/models/booking';
+
+// export async function GET(
+//   req: NextRequest,
+//   context: { params: { id: string } }
+// ) {
+//   try {
+//     await connectDB();
+//     const { id } = context.params;
+
+//     const booking = await Booking.findById(id);
+
+//     if (!booking) {
+//       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+//     }
+
+//     return NextResponse.json(booking, { status: 200 });
+//   } catch (error) {
+//     console.error('[GET BOOKING ERROR]', error);
+//     return NextResponse.json(
+//       { error: 'Internal server error' },
+//       { status: 500 }
+//     );
+//   }
+// }
+// export async function PATCH(
+//   req: NextRequest,
+//   context: { params: { id: string } }
+// ) {
+//   try {
+//     await connectDB();
+//     const { id } = context.params;
+//     const data = await req.json();
+
+//     const booking = await Booking.findByIdAndUpdate(id, data, {
+//       new: true,
+//       runValidators: true,
+//     });
+
+//     if (!booking) {
+//       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+//     }
+
+//     return NextResponse.json(booking, { status: 200 });
+//   } catch (error) {
+//     console.error('[UPDATE BOOKING ERROR]', error);
+//     return NextResponse.json(
+//       { error: 'Internal server error' },
+//       { status: 500 }
+//     );
+//   }
+// }
