@@ -49,10 +49,10 @@ export async function POST(request: Request) {
         role: user.role,
       },
     });
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error("Registration error:", error);
     return NextResponse.json(
-      { error: "Failed to create user" },
+      { error: error instanceof Error ? error.message : "Failed to create user" },
       { status: 500 }
     );
   }

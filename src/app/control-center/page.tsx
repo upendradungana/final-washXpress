@@ -2,9 +2,9 @@
 import { useSession, signOut } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FaTachometerAlt, FaSignOutAlt, FaCheck, FaTimes, FaEdit, FaEye, FaClock, FaPhoneAlt, FaEnvelope } from 'react-icons/fa'
+import { FaTachometerAlt, FaSignOutAlt, FaCheck, FaTimes, FaClock, FaPhoneAlt, FaEnvelope } from 'react-icons/fa'
 import { getBookings, updateBookingStatus } from '@/lib/actions'
-import { Booking, BookingStatus } from '@prisma/client'
+import { BookingStatus } from '@prisma/client'
 
 export default function ControlCenterPage() {
   const { data: session, status } = useSession({
@@ -17,7 +17,6 @@ export default function ControlCenterPage() {
   const [bookings, setBookings] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'history' | 'settings'>('pending')
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedBooking, setSelectedBooking] = useState<string | null>(null)
   const [activeSettingsTab, setActiveSettingsTab] = useState<'profile' | 'security'>('profile')
   const [isUpdating, setIsUpdating] = useState(false)
   const [updateMessage, setUpdateMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null)

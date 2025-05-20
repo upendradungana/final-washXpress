@@ -245,7 +245,7 @@ export default function BookingPage() {
           </div>
           <h2 className="text-2xl font-bold mb-2">Booking Confirmed!</h2>
           <p className="text-gray-400 mb-6">
-            We've received your booking request. We'll contact you shortly to confirm the details.
+            We&apos;ve received your booking request. We&apos;ll contact you shortly to confirm the details.
           </p>
           <Link
             href="/dashboard"

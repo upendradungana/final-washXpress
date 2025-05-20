@@ -1,5 +1,5 @@
 import { User } from 'next-auth'
-import { FaUser, FaEnvelope, FaPhone } from 'react-icons/fa'
+import { FaUser, FaEnvelope } from 'react-icons/fa'
 
 interface AccountSummaryProps {
   user: User | undefined

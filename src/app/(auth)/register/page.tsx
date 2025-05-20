@@ -67,8 +67,8 @@ export default function RegisterPage() {
 
       // Redirect to login page after successful registration
       router.push('/login?registered=true')
-    } catch (err: any) {
-      setError(err.message || 'Registration failed')
+    } catch (err: Error | unknown) {
+      setError(err instanceof Error ? err.message : 'Registration failed')
     } finally {
       setIsLoading(false)
     }

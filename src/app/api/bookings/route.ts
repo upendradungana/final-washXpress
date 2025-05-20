@@ -30,8 +30,9 @@ export async function GET() {
 
     return NextResponse.json(bookings)
   } catch (error) {
+    console.error('Error fetching bookings:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch bookings' },
+      { error: error instanceof Error ? error.message : 'Failed to fetch bookings' },
       { status: 500 }
     )
   }
@@ -62,8 +63,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(booking)
   } catch (error) {
+    console.error('Error creating booking:', error);
     return NextResponse.json(
-      { error: 'Failed to create booking' },
+      { error: error instanceof Error ? error.message : 'Failed to create booking' },
       { status: 500 }
     )
   }

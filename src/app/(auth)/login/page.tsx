@@ -35,7 +35,7 @@ export default function LoginPage() {
         router.push(callbackUrl)
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError(`An unexpected error occurred: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsLoading(false)
     }
@@ -57,7 +57,7 @@ export default function LoginPage() {
         router.push(callbackUrl)
       }
     } catch (err) {
-      setError("Failed to sign in with Google")
+      setError(`Failed to sign in with Google: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsGoogleLoading(false)
     }

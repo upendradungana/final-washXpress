@@ -9,7 +9,7 @@ import UpcomingBooking from '@/components/dashboard/UpcomingBooking'
 import QuickActions from '@/components/dashboard/QuickActions'
 import BookingHistory from '@/components/dashboard/BookingHistory'
 import { getMyBookings } from '@/lib/actions'
-import { Booking as PrismaBooking, BookingStatus, ServiceType, Role } from '@prisma/client'
+import { Booking as PrismaBooking, Role } from '@prisma/client'
 
 // Type for the BookingHistory and UpcomingBooking components
 interface FormattedBooking {
@@ -37,11 +37,9 @@ export default function DashboardPage() {
   })
 
   const [bookings, setBookings] = useState<PrismaBooking[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'users'>('overview')
   const [users, setUsers] = useState<User[]>([])
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -59,7 +57,6 @@ export default function DashboardPage() {
 
     let mounted = true
     const fetchData = async () => {
-      setIsLoading(true)
       try {
         if (session?.user?.role === 'ADMIN') {
           // Fetch users for admin
@@ -77,8 +74,6 @@ export default function DashboardPage() {
       } catch (error) {
         console.error('Error fetching data:', error)
         setError('Failed to load data')
-      } finally {
-        setIsLoading(false)
       }
     }
 

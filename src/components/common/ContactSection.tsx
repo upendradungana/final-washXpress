@@ -64,7 +64,7 @@ export default function ContactSection() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Contact Us</h2>
             <p className="text-xl max-w-2xl mx-auto">
-              Have questions? We're here to help!
+              Have questions? We&apos;re here to help!
             </p>
           </div>
           
@@ -146,7 +146,7 @@ export default function ContactSection() {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400" 
-                    placeholder="What's this about?"
+                    placeholder="What&apos;s this about?"
                   />
                 </div>
                 <div>

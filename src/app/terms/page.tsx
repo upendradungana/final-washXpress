@@ -140,7 +140,7 @@ Our liability, in any case, is limited to the amount paid for the service.`
 
             <div className="prose prose-invert max-w-none mb-8">
               <p className="text-gray-300">
-                Welcome to WashXpress! These Terms and Conditions ("Terms") govern your use of our platform, services, and website. 
+                Welcome to WashXpress! These Terms and Conditions (&quot;Terms&quot;) govern your use of our platform, services, and website. 
                 By accessing or using WashXpress, you agree to be bound by these Terms. Please read them carefully before using our services.
               </p>
             </div>
