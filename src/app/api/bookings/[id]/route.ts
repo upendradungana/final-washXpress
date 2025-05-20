@@ -3,10 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+type RouteContext = { params: { id: string } };
+
 // GET single booking
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   const session = await getServerSession(authOptions);
 
@@ -42,6 +44,7 @@ export async function GET(
     }
 
     return NextResponse.json(booking);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch booking" },
@@ -98,6 +101,7 @@ export async function PATCH(
     });
 
     return NextResponse.json(booking);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to update booking" },
@@ -136,6 +140,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: "Booking deleted successfully" });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to delete booking" },
