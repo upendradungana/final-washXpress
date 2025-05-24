@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+type RouteContext = { params: { id: string } };
 
 // GET a single booking
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: RouteContext
 ) {
   const { id } = context.params;
   const session = await getServerSession(authOptions);
@@ -54,7 +55,7 @@ export async function GET(
 // UPDATE a booking
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: RouteContext
 ) {
   const { id } = context.params;
   const session = await getServerSession(authOptions);
@@ -107,7 +108,7 @@ export async function PATCH(
 // DELETE a booking
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: RouteContext
 ) {
   const { id } = context.params;
   const session = await getServerSession(authOptions);
