@@ -6,9 +6,9 @@ import { prisma } from "@/lib/prisma";
 // GET a single booking
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = params;
+  const { id } = context.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -54,9 +54,9 @@ export async function GET(
 // UPDATE a booking
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = params;
+  const { id } = context.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -107,9 +107,9 @@ export async function PATCH(
 // DELETE a booking
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = params;
+  const { id } = context.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
