@@ -14,8 +14,10 @@ const vehicleSchema = z.object({
   year: z.string()
     .min(1, 'Year is required')
     .regex(/^\d{4}$/, 'Must be a valid year')
-    .transform(Number)
-    .refine((val) => val >= 1900 && val <= new Date().getFullYear(), {
+    .refine((val) => {
+      const year = parseInt(val);
+      return year >= 1900 && year <= new Date().getFullYear();
+    }, {
       message: `Year must be between 1900 and ${new Date().getFullYear()}`,
     }),
   license: z.string().min(1, 'License plate number is required'),
@@ -24,7 +26,13 @@ const vehicleSchema = z.object({
   }),
 })
 
-type VehicleFormData = z.infer<typeof vehicleSchema>
+type VehicleFormData = {
+  make: string;
+  model: string;
+  year: string;
+  license: string;
+  type: 'CAR' | 'SUV_TRUCK' | 'MOTORCYCLE' | 'BICYCLE' | 'OTHER';
+}
 
 export default function NewVehiclePage() {
   const { data: session, status } = useSession({

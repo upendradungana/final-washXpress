@@ -2,7 +2,7 @@
 import { useSession, signOut } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FaTachometerAlt, FaSignOutAlt, FaCheck, FaTimes, FaClock, FaPhoneAlt, FaEnvelope } from 'react-icons/fa'
+import { FaTachometerAlt, FaSignOutAlt, FaCheck, FaTimes, FaClock, FaPhoneAlt, FaEnvelope, FaEye } from 'react-icons/fa'
 import { getBookings, updateBookingStatus } from '@/lib/actions'
 import { BookingStatus } from '@prisma/client'
 
@@ -15,7 +15,7 @@ export default function ControlCenterPage() {
   })
 
   const [bookings, setBookings] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'history' | 'settings'>('pending')
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'history' | 'didntMakeOut' | 'settings'>('pending')
   const [isLoading, setIsLoading] = useState(true)
   const [activeSettingsTab, setActiveSettingsTab] = useState<'profile' | 'security'>('profile')
   const [isUpdating, setIsUpdating] = useState(false)
@@ -28,6 +28,7 @@ export default function ControlCenterPage() {
     newPassword: '',
     confirmPassword: ''
   })
+  const [viewBooking, setViewBooking] = useState<any | null>(null)
 
   const isToday = (date: Date) => {
     const today = new Date()
@@ -36,16 +37,40 @@ export default function ControlCenterPage() {
       date.getFullYear() === today.getFullYear()
   }
 
-  const todayBookings = bookings.filter(booking => isToday(new Date(booking.date)))
+  const isWithin24Hours = (date: Date) => {
+    const now = new Date()
+    const bookingDate = new Date(date)
+    const diffInHours = (now.getTime() - bookingDate.getTime()) / (1000 * 60 * 60)
+    return diffInHours <= 24
+  }
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // Pending: all pending/confirmed bookings with today or future date
   const pendingBookings = bookings.filter(booking => 
-    (booking.status === 'PENDING' || booking.status === 'CONFIRMED') && 
-    isToday(new Date(booking.date))
-  )
+    (booking.status === 'PENDING' || booking.status === 'CONFIRMED') &&
+    new Date(booking.date) >= startOfToday
+  );
+
+  // Didn't Make Out: all pending/confirmed bookings with a past date
+  const didntMakeOutBookings = bookings.filter(booking => 
+    (booking.status === 'PENDING' || booking.status === 'CONFIRMED') &&
+    new Date(booking.date) < startOfToday
+  );
+
+  // Completed: completed bookings marked as completed within the last 24 hours
   const completedBookings = bookings.filter(booking => 
-    booking.status === 'COMPLETED' && 
-    isToday(new Date(booking.date))
-  )
-  const historyBookings = bookings.filter(booking => !isToday(new Date(booking.date)))
+    booking.status === 'COMPLETED' &&
+    booking.completedAt &&
+    (new Date().getTime() - new Date(booking.completedAt).getTime()) <= 24 * 60 * 60 * 1000
+  );
+
+  // History: completed bookings older than 24 hours and all other historical bookings, but NOT the didn't make out ones
+  const historyBookings = bookings.filter(booking => 
+    (booking.status === 'COMPLETED' && !isWithin24Hours(new Date(booking.date))) ||
+    (!isToday(new Date(booking.date)) && booking.status !== 'PENDING' && booking.status !== 'CONFIRMED')
+  );
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.role !== 'PROVIDER' && session?.user?.role !== 'ADMIN') {
@@ -55,7 +80,11 @@ export default function ControlCenterPage() {
     const fetchBookings = async () => {
       setIsLoading(true)
       try {
-        const data = await getBookings(activeTab === 'history' ? 'completed' : activeTab)
+        let filter: 'pending' | 'completed' | 'all' = 'all';
+        if (activeTab === 'pending') filter = 'pending';
+        else if (activeTab === 'history' || activeTab === 'completed') filter = 'completed';
+        
+        const data = await getBookings(filter)
         setBookings(data)
       } catch (error) {
         console.error('Failed to fetch bookings:', error)
@@ -236,7 +265,7 @@ export default function ControlCenterPage() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-400 text-sm">Today's Bookings</p>
-                <p className="text-2xl font-bold">{todayBookings.length}</p>
+                <p className="text-2xl font-bold">{bookings.length}</p>
               </div>
               <div className="text-blue-400">
                 <FaClock className="text-2xl" />
@@ -282,6 +311,16 @@ export default function ControlCenterPage() {
             onClick={() => setActiveTab('pending')}
           >
             Pending
+          </button>
+          <button
+            className={`px-6 py-3 font-medium ${
+              activeTab === 'didntMakeOut' 
+                ? 'text-blue-400 border-b-2 border-blue-400' 
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+            onClick={() => setActiveTab('didntMakeOut')}
+          >
+            Didn't Make Out
           </button>
           <button
             className={`px-6 py-3 font-medium ${
@@ -465,63 +504,81 @@ export default function ControlCenterPage() {
                   <th className="py-3 px-4 text-left">Service</th>
                   <th className="py-3 px-4 text-left">Time</th>
                   <th className="py-3 px-4 text-left">Status</th>
-                  {activeTab === 'pending' && <th className="py-3 px-4 text-left">Actions</th>}
+                  {activeTab === 'pending' && session?.user?.role === 'PROVIDER' && (
+                    <th className="py-3 px-4 text-left">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
-                  {bookings.map((booking) => (
-                    <tr key={booking.id} className="hover:bg-gray-700/50 transition-colors">
-                      <td className="py-3 px-4">{booking.id}</td>
+                {(activeTab === 'pending' ? pendingBookings : activeTab === 'completed' ? completedBookings : activeTab === 'didntMakeOut' ? didntMakeOutBookings : historyBookings).map((booking) => (
+                  <tr key={booking.id} className="hover:bg-gray-700/50 transition-colors">
+                    <td className="py-3 px-4">{booking.id}</td>
                     <td className="py-3 px-4">
-                        <div className="flex flex-col">
-                          <span className="font-medium">{booking.user.name}</span>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <button
-                              onClick={() => handleContactCustomer('email', booking.user.email)}
-                              className="text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              <FaEnvelope />
-                            </button>
-                            <button
-                              onClick={() => handleContactCustomer('phone', booking.user.phone)}
-                              className="text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              <FaPhoneAlt />
-                            </button>
-                          </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{booking.user.name}</span>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <button
+                            onClick={() => handleContactCustomer('email', booking.user.email)}
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                            <FaEnvelope />
+                          </button>
+                          <button
+                            onClick={() => handleContactCustomer('phone', booking.user.phone)}
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                            <FaPhoneAlt />
+                          </button>
                         </div>
+                      </div>
                     </td>
-                      <td className="py-3 px-4">{booking.vehicle.model}</td>
-                      <td className="py-3 px-4">{booking.serviceType}</td>
+                    <td className="py-3 px-4">{booking.vehicle.model}</td>
+                    <td className="py-3 px-4">{booking.serviceType}</td>
                     <td className="py-3 px-4">
-                        {new Date(booking.date).toLocaleTimeString()}
+                      {new Date(booking.date).toLocaleTimeString()}
                     </td>
                     <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         booking.status === 'COMPLETED'
-                            ? 'bg-green-100 text-green-800'
-                            : booking.status === 'PENDING'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-blue-100 text-blue-800'
+                          ? 'bg-green-100 text-green-800'
+                          : booking.status === 'PENDING'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : booking.status === 'CANCELLED'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-blue-100 text-blue-800'
                       }`}>
                         {booking.status}
                       </span>
                     </td>
-                    {activeTab === 'pending' && (
+                    {activeTab === 'pending' && session?.user?.role === 'PROVIDER' && (
                       <td className="py-3 px-4">
-                          <div className="flex items-center space-x-2">
+                        <div className="flex flex-col items-center space-y-2">
+                          <div className="flex items-center space-x-3">
                             <button
                               onClick={() => handleStatusChange(booking.id, 'COMPLETED')}
-                              className="text-green-400 hover:text-green-300 transition-colors"
+                              className="group relative flex items-center justify-center w-9 h-9 rounded-full bg-green-500/10 hover:bg-green-500/20 transition duration-200 shadow-sm border border-green-500 hover:scale-110"
+                              aria-label="Mark as Completed"
                             >
-                              <FaCheck />
+                              <FaCheck className="text-green-500 group-hover:text-white text-lg" />
+                              <span className="absolute bottom-[-2.2rem] left-1/2 -translate-x-1/2 px-2 py-1 text-xs rounded bg-gray-900 text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-lg z-10">Mark as Completed</span>
                             </button>
                             <button
                               onClick={() => handleStatusChange(booking.id, 'CANCELLED')}
-                              className="text-red-400 hover:text-red-300 transition-colors"
+                              className="group relative flex items-center justify-center w-9 h-9 rounded-full bg-red-500/10 hover:bg-red-500/20 transition duration-200 shadow-sm border border-red-500 hover:scale-110"
+                              aria-label="Cancel Booking"
                             >
-                              <FaTimes />
+                              <FaTimes className="text-red-500 group-hover:text-white text-lg" />
+                              <span className="absolute bottom-[-2.2rem] left-1/2 -translate-x-1/2 px-2 py-1 text-xs rounded bg-gray-900 text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-lg z-10">Cancel Booking</span>
                             </button>
+                          </div>
+                          <button
+                            onClick={() => setViewBooking(booking)}
+                            className="group relative flex items-center justify-center w-9 h-9 rounded-full bg-blue-500/10 hover:bg-blue-500/20 transition duration-200 shadow-sm border border-blue-500 hover:scale-110 mt-1"
+                            aria-label="View Details"
+                          >
+                            <FaEye className="text-blue-500 group-hover:text-white text-lg" />
+                            <span className="absolute bottom-[-2.2rem] left-1/2 -translate-x-1/2 px-2 py-1 text-xs rounded bg-gray-900 text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-lg z-10">View Details</span>
+                          </button>
                         </div>
                       </td>
                     )}
@@ -533,6 +590,37 @@ export default function ControlCenterPage() {
           )}
         </div>
       </div>
+
+      {/* Booking Details Modal */}
+      {viewBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-gray-900 rounded-lg shadow-xl p-8 max-w-md w-full relative">
+            <button
+              onClick={() => setViewBooking(null)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
+              aria-label="Close"
+            >
+              <FaTimes />
+            </button>
+            <h2 className="text-2xl font-bold mb-4 text-white">Booking Details</h2>
+            <div className="space-y-2 text-gray-200">
+              <div><span className="font-semibold">Booking ID:</span> {viewBooking.id}</div>
+              <div><span className="font-semibold">Customer:</span> {viewBooking.user?.name}</div>
+              <div><span className="font-semibold">Email:</span> {viewBooking.user?.email}</div>
+              <div><span className="font-semibold">Phone:</span> {viewBooking.user?.phone}</div>
+              <div><span className="font-semibold">Vehicle Model:</span> {viewBooking.vehicle?.model || 'N/A'}</div>
+              <div><span className="font-semibold">Vehicle Make:</span> {viewBooking.vehicle?.make || 'N/A'}</div>
+              <div><span className="font-semibold">Vehicle Year:</span> {viewBooking.vehicle?.year || 'N/A'}</div>
+              <div><span className="font-semibold">Number Plate:</span> {viewBooking.vehicle?.license || viewBooking.vehicle?.numberPlate || viewBooking.vehicle?.number_plate || 'N/A'}</div>
+              <div><span className="font-semibold">Vehicle Type:</span> {viewBooking.vehicle?.type || 'N/A'}</div>
+              <div><span className="font-semibold">Service:</span> {viewBooking.serviceType}</div>
+              <div><span className="font-semibold">Date:</span> {new Date(viewBooking.date).toLocaleDateString()}</div>
+              <div><span className="font-semibold">Time:</span> {new Date(viewBooking.date).toLocaleTimeString()}</div>
+              <div><span className="font-semibold">Status:</span> {viewBooking.status}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

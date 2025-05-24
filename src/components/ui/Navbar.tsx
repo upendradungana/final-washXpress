@@ -22,12 +22,14 @@ export default function Navbar() {
   ];
 
   const providerNavLinks = [
-    { href: '/control-center', label: 'Control Centre' }
+    { href: '/control-center', label: 'Control Centre' },
+    { href: '/provider-contact', label: 'Contact' }
   ];
 
   const adminNavLinks = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/control-center', label: 'Control Centre' }
+    { href: '/control-center', label: 'Control Centre' },
+    { href: '/admin/messages', label: 'Messages' }
   ];
 
   const getNavLinks = () => {
@@ -50,7 +52,10 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo (far left) */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-3xl font-extrabold tracking-tight text-white whitespace-nowrap hover:text-blue-400 transition-colors duration-300">
+            <Link 
+              href={session?.user?.role === 'PROVIDER' ? '/control-center' : '/'} 
+              className="text-3xl font-extrabold tracking-tight text-white whitespace-nowrap hover:text-blue-400 transition-colors duration-300"
+            >
               <span>Wash</span>
               <span className="text-green-400 underline decoration-green-400">Xpress</span>
             </Link>

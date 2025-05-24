@@ -270,7 +270,7 @@ export default function DashboardPage() {
 
         {activeTab === 'overview' && user?.role !== 'ADMIN' && (
           <>
-            <AccountSummary />
+            <AccountSummary user={user} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
               <UpcomingBooking bookings={formattedBookings} />
               <QuickActions />

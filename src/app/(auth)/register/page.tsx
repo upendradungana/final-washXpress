@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { FaUser, FaEnvelope, FaPhone, FaLock, FaArrowLeft } from 'react-icons/fa'
 import Link from 'next/link'
+import { handleNetworkError } from '@/lib/utils'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -67,8 +68,8 @@ export default function RegisterPage() {
 
       // Redirect to login page after successful registration
       router.push('/login?registered=true')
-    } catch (err: Error | unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+    } catch (err) {
+      setError(handleNetworkError(err))
     } finally {
       setIsLoading(false)
     }

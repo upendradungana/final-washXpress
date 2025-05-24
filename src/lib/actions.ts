@@ -128,9 +128,13 @@ export async function getBookings(filter: 'pending' | 'completed' | 'all') {
 
 export async function updateBookingStatus(bookingId: string, status: BookingStatus) {
   try {
+    const data: any = { status };
+    if (status === "COMPLETED") {
+      data.completedAt = new Date();
+    }
     const booking = await prisma.booking.update({
       where: { id: bookingId },
-      data: { status },
+      data,
     });
 
     revalidatePath("/control-center");

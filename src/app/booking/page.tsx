@@ -9,6 +9,7 @@ import { createBooking } from '@/lib/actions'
 import { FaUser, FaPhone, FaEnvelope, FaCar, FaCalendarDay, FaClock, FaCheckCircle } from 'react-icons/fa'
 import { FaArrowRight, FaArrowLeft, FaSpinner, FaCalendarCheck } from 'react-icons/fa'
 import Link from 'next/link'
+import { ServiceType } from '@prisma/client'
 
 const bookingSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -17,7 +18,7 @@ const bookingSchema = z.object({
   vehicleId: z.string().min(1, 'Vehicle selection is required'),
   serviceType: z.enum(['BASIC_WASH', 'PREMIUM_WASH', 'FULL_DETAILING', 'OTHER'], {
     required_error: 'Service type is required',
-  }),
+  }).optional(),
   date: z.string().min(1, 'Date is required'),
   timeSlot: z.string().min(1, 'Time slot is required'),
   specialRequests: z.string().optional(),
@@ -34,7 +35,15 @@ interface Vehicle {
   type: string
 }
 
-const services = [
+interface Service {
+  type: ServiceType;
+  name: string;
+  price: string;
+  description: string;
+  features: string[];
+}
+
+const services: Service[] = [
   {
     type: 'BASIC_WASH',
     name: 'Basic Wash',
@@ -183,17 +192,16 @@ export default function BookingPage() {
 
     setIsSubmitting(true)
     try {
-      const result = await createBooking({
-        ...data,
+      // At this point, we know serviceType is defined due to validation above
+      await createBooking({
+        serviceType: data.serviceType!,
+        vehicleId: data.vehicleId,
         userId: session.user.id,
-        vehicleId: data.vehicleId
+        date: data.date,
+        timeSlot: data.timeSlot,
+        specialRequests: data.specialRequests
       })
-      
-      if (result?.error) {
-        setSubmitError(result.error)
-      } else {
-        setSuccess(true)
-      }
+      setSuccess(true)
     } catch (error) {
       console.error('Booking error:', error)
       if (error instanceof Error) {
