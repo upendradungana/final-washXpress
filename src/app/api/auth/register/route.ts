@@ -50,10 +50,10 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: Error | unknown) {
-    console.error("Registration error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create user" },
-      { status: 500 }
-    );
-  }
+  console.error("Registration error:", error, JSON.stringify(error));
+  return NextResponse.json(
+    { error: error instanceof Error ? error.message : "Failed to create user" },
+    { status: 500 }
+  );
+}
 } 
