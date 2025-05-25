@@ -1,0 +1,13 @@
+// ...existing code...
+export async function POST(request: Request) {
+  try {
+    // ...existing code...
+  } catch (error: Error | unknown) {
+    console.error("Registration error:", error); // Make sure this logs the full error
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to create user" },
+      { status: 500 }
+    );
+  }
+}
+// ...existing code...
