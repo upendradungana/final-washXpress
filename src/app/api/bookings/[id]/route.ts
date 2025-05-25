@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { BookingStatus } from "@prisma/client";
 
 // GET a single booking
 export async function GET(
@@ -55,7 +56,6 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user) {
@@ -79,15 +79,27 @@ export async function PATCH(
     }
 
     const body = await request.json();
+
+    // Define the type with BookingStatus
     type AllowedBookingUpdateData = {
-      status?: string;
+      status?: BookingStatus;
     };
+
     const updateData: AllowedBookingUpdateData = {};
+
+    // Validate and cast the status from the request body
     if (body.status && typeof body.status === "string") {
-      updateData.status = body.status;
+      const validStatuses = Object.values(BookingStatus);
+      if (validStatuses.includes(body.status as BookingStatus)) {
+        updateData.status = body.status as BookingStatus;
+      } else {
+        return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
+      }
     }
+
+    // Handle completedAt update
     let completedAtUpdate: { completedAt?: Date } = {};
-    if (body.status === "COMPLETED") {
+    if (updateData.status === BookingStatus.COMPLETED) {
       completedAtUpdate.completedAt = new Date();
     }
 
@@ -111,7 +123,6 @@ export async function PATCH(
     );
   }
 }
-
 // DELETE a booking
 export async function DELETE(
   request: NextRequest,
