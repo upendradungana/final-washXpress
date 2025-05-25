@@ -6,11 +6,11 @@ import { prisma } from "@/lib/prisma";
 // GET a single booking
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } } // Explicitly define params with id: string
+  context: { params: { id: string } } // Explicitly define params type
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
-  // Type safety check (already ensured by TypeScript, but adding for runtime safety)
+  // Runtime check for id
   if (!id || typeof id !== "string") {
     return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
   }
@@ -57,9 +57,9 @@ export async function GET(
 // UPDATE a booking
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   if (!id || typeof id !== "string") {
     return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
@@ -124,9 +124,9 @@ export async function PATCH(
 // DELETE a booking
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = params;
+  const { id } = context.params;
 
   if (!id || typeof id !== "string") {
     return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
