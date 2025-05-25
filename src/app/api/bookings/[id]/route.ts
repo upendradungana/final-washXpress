@@ -6,14 +6,9 @@ import { prisma } from "@/lib/prisma";
 // GET a single booking
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } } // Explicitly define params type
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
-
-  // Runtime check for id
-  if (!id || typeof id !== "string") {
-    return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
-  }
+  const { id } = await params;
 
   const session = await getServerSession(authOptions);
 
@@ -57,13 +52,9 @@ export async function GET(
 // UPDATE a booking
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
-
-  if (!id || typeof id !== "string") {
-    return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
-  }
+  const { id } = await params;
 
   const session = await getServerSession(authOptions);
 
@@ -124,13 +115,9 @@ export async function PATCH(
 // DELETE a booking
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
-
-  if (!id || typeof id !== "string") {
-    return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
-  }
+  const { id } = await params;
 
   const session = await getServerSession(authOptions);
 
