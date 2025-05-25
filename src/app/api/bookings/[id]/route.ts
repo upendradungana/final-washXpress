@@ -1,15 +1,24 @@
 // src/app/api/bookings/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; // Assuming this path is correct
-import { prisma } from "@/lib/prisma"; // Assuming this path is correct
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
-// GET a single booking
+// Define a more general params type, though for [id] it's just 'id'
+type DynamicRouteParams = { [key: string]: string | string[] | undefined };
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } } // Changed: Destructure params directly
+  context: { params: DynamicRouteParams } // Use the more general params type for context
 ) {
-  const { id } = params; // Use the destructured id
+  const id = context.params.id; // Access id
+
+  // Since 'id' comes from [id], it should be a string. Add a check for type safety.
+  if (typeof id !== 'string') {
+    console.error("ID parameter is not a string:", id);
+    return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
+  }
+
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -18,7 +27,7 @@ export async function GET(
 
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id },
+      where: { id }, // 'id' is now confirmed to be a string
       include: {
         user: {
           select: {
@@ -35,7 +44,6 @@ export async function GET(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    // Ensure session.user and session.user.role are defined before accessing
     if (
       session.user?.role !== "PROVIDER" &&
       booking.userId !== session.user?.id
@@ -53,14 +61,19 @@ export async function GET(
   }
 }
 
-// UPDATE a booking
+// IMPORTANT: Apply similar changes to PATCH and DELETE functions for consistency
+// For PATCH:
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } } // Changed: Destructure params directly
+  context: { params: DynamicRouteParams }
 ) {
-  const { id } = params; // Use the destructured id
-  const session = await getServerSession(authOptions);
-
+  const id = context.params.id;
+  if (typeof id !== 'string') {
+    return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
+  }
+  // ... rest of your PATCH logic using the string 'id'
+  const session = await getServerSession(authOptions); // Moved up for consistency
+  // ... (your existing PATCH logic)
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -74,7 +87,6 @@ export async function PATCH(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    // Ensure session.user and session.user.role are defined before accessing
     if (
       session.user?.role !== "PROVIDER" &&
       existingBooking.userId !== session.user?.id
@@ -83,40 +95,28 @@ export async function PATCH(
     }
 
     const body = await request.json();
-
-    // It's good practice to define what fields can be updated
-    // and pick only those from the body to prevent accidental updates.
-    // Prisma will only update fields that are part of its model schema.
     type AllowedBookingUpdateData = {
       status?: string;
-      // Add other fields that you allow to be updated via PATCH
-      // Example: notes?: string;
     };
-
     const updateData: AllowedBookingUpdateData = {};
     if (body.status && typeof body.status === 'string') {
         updateData.status = body.status;
     }
-    // Add other allowed fields from body to updateData similarly
-
-    // Specific logic for 'COMPLETED' status
     let completedAtUpdate: { completedAt?: Date } = {};
     if (body.status === "COMPLETED") {
       completedAtUpdate.completedAt = new Date();
     }
-
     const updatedBooking = await prisma.booking.update({
       where: { id },
       data: {
-        ...updateData, // Contains validated and allowed fields from body
-        ...completedAtUpdate, // Adds completedAt if status is COMPLETED
+        ...updateData,
+        ...completedAtUpdate,
       },
     });
-
     return NextResponse.json(updatedBooking);
   } catch (error) {
     console.error("Failed to update booking:", error);
-    if (error instanceof SyntaxError) { // Handle cases where request.json() fails
+    if (error instanceof SyntaxError) {
         return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
     }
     return NextResponse.json(
@@ -126,14 +126,19 @@ export async function PATCH(
   }
 }
 
-// DELETE a booking
+
+// For DELETE:
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } } // Changed: Destructure params directly
+  context: { params: DynamicRouteParams }
 ) {
-  const { id } = params; // Use the destructured id
-  const session = await getServerSession(authOptions);
-
+  const id = context.params.id;
+  if (typeof id !== 'string') {
+    return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
+  }
+  // ... rest of your DELETE logic using the string 'id'
+  const session = await getServerSession(authOptions); // Moved up
+  // ... (your existing DELETE logic)
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -147,7 +152,6 @@ export async function DELETE(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    // Ensure session.user and session.user.role are defined before accessing
     if (
       session.user?.role !== "PROVIDER" &&
       existingBooking.userId !== session.user?.id
@@ -158,7 +162,6 @@ export async function DELETE(
     await prisma.booking.delete({
       where: { id },
     });
-
     return NextResponse.json({ message: "Booking deleted successfully" });
   } catch (error) {
     console.error("Failed to delete booking:", error);
