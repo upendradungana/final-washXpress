@@ -1,33 +1,29 @@
-// src/app/api/bookings/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Define a more general params type, though for [id] it's just 'id'
-type DynamicRouteParams = { [key: string]: string | string[] | undefined };
-
+// GET a single booking
 export async function GET(
   request: NextRequest,
-  context: { params: DynamicRouteParams } // Use the more general params type for context
+  { params }: { params: { id: string } } // Explicitly define params with id: string
 ) {
-  const id = context.params.id; // Access id
+  const { id } = params;
 
-  // Since 'id' comes from [id], it should be a string. Add a check for type safety.
-  if (typeof id !== 'string') {
-    console.error("ID parameter is not a string:", id);
+  // Type safety check (already ensured by TypeScript, but adding for runtime safety)
+  if (!id || typeof id !== "string") {
     return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
   }
 
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id }, // 'id' is now confirmed to be a string
+      where: { id },
       include: {
         user: {
           select: {
@@ -44,10 +40,7 @@ export async function GET(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (
-      session.user?.role !== "PROVIDER" &&
-      booking.userId !== session.user?.id
-    ) {
+    if (session.user.role !== "PROVIDER" && booking.userId !== session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -61,20 +54,20 @@ export async function GET(
   }
 }
 
-// IMPORTANT: Apply similar changes to PATCH and DELETE functions for consistency
-// For PATCH:
+// UPDATE a booking
 export async function PATCH(
   request: NextRequest,
-  context: { params: DynamicRouteParams }
+  { params }: { params: { id: string } }
 ) {
-  const id = context.params.id;
-  if (typeof id !== 'string') {
+  const { id } = params;
+
+  if (!id || typeof id !== "string") {
     return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
   }
-  // ... rest of your PATCH logic using the string 'id'
-  const session = await getServerSession(authOptions); // Moved up for consistency
-  // ... (your existing PATCH logic)
-  if (!session) {
+
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -88,8 +81,8 @@ export async function PATCH(
     }
 
     if (
-      session.user?.role !== "PROVIDER" &&
-      existingBooking.userId !== session.user?.id
+      session.user.role !== "PROVIDER" &&
+      existingBooking.userId !== session.user.id
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -99,13 +92,14 @@ export async function PATCH(
       status?: string;
     };
     const updateData: AllowedBookingUpdateData = {};
-    if (body.status && typeof body.status === 'string') {
-        updateData.status = body.status;
+    if (body.status && typeof body.status === "string") {
+      updateData.status = body.status;
     }
     let completedAtUpdate: { completedAt?: Date } = {};
     if (body.status === "COMPLETED") {
       completedAtUpdate.completedAt = new Date();
     }
+
     const updatedBooking = await prisma.booking.update({
       where: { id },
       data: {
@@ -113,11 +107,12 @@ export async function PATCH(
         ...completedAtUpdate,
       },
     });
+
     return NextResponse.json(updatedBooking);
   } catch (error) {
     console.error("Failed to update booking:", error);
     if (error instanceof SyntaxError) {
-        return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
     }
     return NextResponse.json(
       { error: "Failed to update booking" },
@@ -126,20 +121,20 @@ export async function PATCH(
   }
 }
 
-
-// For DELETE:
+// DELETE a booking
 export async function DELETE(
   request: NextRequest,
-  context: { params: DynamicRouteParams }
+  { params }: { params: { id: string } }
 ) {
-  const id = context.params.id;
-  if (typeof id !== 'string') {
+  const { id } = params;
+
+  if (!id || typeof id !== "string") {
     return NextResponse.json({ error: "Invalid ID parameter" }, { status: 400 });
   }
-  // ... rest of your DELETE logic using the string 'id'
-  const session = await getServerSession(authOptions); // Moved up
-  // ... (your existing DELETE logic)
-  if (!session) {
+
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -153,8 +148,8 @@ export async function DELETE(
     }
 
     if (
-      session.user?.role !== "PROVIDER" &&
-      existingBooking.userId !== session.user?.id
+      session.user.role !== "PROVIDER" &&
+      existingBooking.userId !== session.user.id
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -162,6 +157,7 @@ export async function DELETE(
     await prisma.booking.delete({
       where: { id },
     });
+
     return NextResponse.json({ message: "Booking deleted successfully" });
   } catch (error) {
     console.error("Failed to delete booking:", error);
