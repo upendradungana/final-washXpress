@@ -7,6 +7,13 @@ import { FaArrowLeft } from 'react-icons/fa'
 import BookingHistory from '@/components/dashboard/BookingHistory'
 import { getMyBookings } from '@/lib/actions'
 import { Booking as PrismaBooking, BookingStatus, ServiceType, Role } from '@prisma/client'
+import { Suspense } from 'react'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { format } from 'date-fns'
+import { handleNetworkError } from '@/lib/utils'
+import { Booking } from '@prisma/client'
 
 // Type for the BookingHistory and UpcomingBooking components
 interface FormattedBooking {

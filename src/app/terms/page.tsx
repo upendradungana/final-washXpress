@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { FaChevronDown, FaChevronUp, FaEnvelope, FaPhone, FaArrowLeft } from 'react-icons/fa'
+import { FaChevronDown, FaChevronUp, FaEnvelope, FaPhone, FaArrowLeft, FaMapMarkerAlt } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 
 export default function TermsPage() {

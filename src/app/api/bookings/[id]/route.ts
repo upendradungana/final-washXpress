@@ -98,7 +98,7 @@ export async function PATCH(
     }
 
     // Handle completedAt update
-    let completedAtUpdate: { completedAt?: Date } = {};
+    const completedAtUpdate: { completedAt?: Date } = {};
     if (updateData.status === BookingStatus.COMPLETED) {
       completedAtUpdate.completedAt = new Date();
     }

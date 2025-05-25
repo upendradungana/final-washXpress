@@ -188,11 +188,11 @@ export default function ControlCenterPage() {
     }
   }
 
-  const handleStatusChange = async (bookingId: string, status: BookingStatus) => {
+  const handleStatusChange = async (bookingId: string, newStatus: string) => {
     try {
-      await updateBookingStatus(bookingId, status)
+      await updateBookingStatus(bookingId, newStatus as BookingStatus)
       setBookings(bookings.map(booking => 
-        booking.id === bookingId ? { ...booking, status } : booking
+        booking.id === bookingId ? { ...booking, status: newStatus } : booking
       ))
     } catch (error) {
       console.error('Failed to update booking status:', error)
@@ -219,6 +219,11 @@ export default function ControlCenterPage() {
 
     fetchAllBookings()
   }, [session])
+
+  const handleError = (error: Error) => {
+    console.error('Error:', error);
+    // Handle error appropriately
+  }
 
   if (status === 'loading' || isLoading) {
     return (

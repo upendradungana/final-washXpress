@@ -1,5 +1,5 @@
 'use client'
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
@@ -7,6 +7,7 @@ import { FaEnvelope, FaLock, FaGoogle, FaArrowLeft } from 'react-icons/fa'
 import { FiAlertCircle } from 'react-icons/fi'
 import Link from 'next/link'
 import { handleNetworkError } from '@/lib/utils'
+import { useSession } from 'next-auth/react'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -211,6 +212,15 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const { data: session } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (session) {
+      router.push('/dashboard')
+    }
+  }, [session, router])
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-20">
       <Suspense fallback={
